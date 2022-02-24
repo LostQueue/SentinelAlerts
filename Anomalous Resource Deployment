@@ -1,0 +1,30 @@
+// Name: Anomalous Resource Deployment
+
+// Creator: Marquis Robinson
+
+// Notes: What kind of Resources would be best monitored ? Consider Adding Time Series
+
+// Description: Anomalous number of resource creation or deployments
+
+let starttime = 7d;
+let endtime = 1d;
+let timeframe = 1h;
+let TotalEventsThreshold = 5;
+let OperationList = dynamic(  // Unsure if OperationList is a thing
+["Create Deployment","Create Virtual Machine","Create Network Security Group"]);
+let TimeSeriesData= 
+
+AzureActivity //The table (Azure resource creation and change events)
+| where TimeGenerated >= startofday(ago(7d))
+| where OperationName == "Create Deployment" or OperationName == "Create Virtual Machine" or OperationName == "Create Network Security Group"
+| where ActivityStatusValue == "Start" // Activity is the Spawning of Event
+| summarize count() by TimeGenerated , ResourceGroup , Creator , CallerIpAddress , ActivityStatusValue , // Getting a count of how many times each individual has started creation
+| extend AccountCustomEntity = Caller // 
+| extend IPCustomEntity = CallerIpAddress // 
+| extend HostCustomEntity = HostName // 
+| extend ResourceId = // Find Proper Value for here
+
+| where Process in (OperationList)
+| Project TimeGenerated, Computer, Account, Process
+| make-series Total=count() on TimeGenerated from ago(starttime) to ago(endtime) step timeframe by Process;
+TimeSeriesData
