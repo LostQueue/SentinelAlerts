@@ -30,17 +30,11 @@ AzureActivity //The table (Azure resource creation and change events)
 TimeSeriesData
 
 let TimeSeriesAlerts=TimeSeriesData
-| extend (anomalies, score, baseline) = series_decompose_anomalies(Total, 1.5, -1, 'linefit')
+| extend (anomalies, score, baseline) = series_decompose_anomalies(Total, 2.5, -1, 'linefit')
 | mv-expand Total to typeof(double), TimeGenerated to typeof(datetime), anomalies to typeof(double),score to typeof(double), baseline to typeof(long)
 | where anomalies > 0
 | project Process,TimeGenerated, Total, baseline, anomalies, score
 | where Total > TotalEventsThreshold;
 TimeSeriesAlerts
 
-TimeSeriesAlerts
-| join (
-AzureActivity
-| where OperationName == "Create Deployment" or "Create Virtual Machine" or "Create Network Security Group" | extend Process = tolower(Process)
-| summarize CommandlineCount=count() by bin(TimeGenerated, 1h), Resource Group, Creator, CallerIpAddress, ActivityStatusValue
-) on Process, TimeGenerated | extend AnomalyTimeattheHour = TimeGenerated 
-| project AnomalyTimeattheHour, Computer, Account, Process, Total, baseline, anomalies , score
+
