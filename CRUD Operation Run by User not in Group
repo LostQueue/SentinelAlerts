@@ -1,0 +1,16 @@
+IdentityInfo
+| where TimeGenerated > ago(21d)
+| summarize arg_max(TimeGenerated, *) by AccountUPN
+| mv-expand GroupMembership
+| where GroupMembership has_any ("Group x", "Group y", "Group z")
+| project AccountUPN
+| join kind=rightanti
+
+(
+Dynamics365
+
+| where your query here
+
+| project UserId
+
+) on $left.AccountUPN==$right.UserId
