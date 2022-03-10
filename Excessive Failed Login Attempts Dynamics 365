@@ -1,1 +1,13 @@
+let timeframe = 1d;
+let timebin = 10m;
+let signin_threshold = 5;  //Maybe let failedthreshold = 5;
+SigninLogs
+| where TimeGenerated >= ago(timeframe)
+| where Appname == 
+| where ResultCode == 
+| summarize count () by IpAddress
+| Order by Usserid desc
+| Project Computer, Account, Userid, IpAddress
 
+
+//Filter based on Appname, ResultCode,  Use Signinlogs Table
