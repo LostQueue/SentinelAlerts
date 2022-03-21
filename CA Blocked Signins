@@ -1,3 +1,6 @@
+//Identifies spike in failed sign-ins from user accounts due to conditional access policied.
+//Spike is determined based on Time series anomaly which will look at historical baseline values.
+
 let starttime = 14d;
   let timeframe = 1d;
   let scorethreshold = 3;
