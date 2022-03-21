@@ -3,12 +3,14 @@ let timebin = 10m;
 let signin_threshold = 5;  //Maybe let failedthreshold = 5;
 SigninLogs
 | where TimeGenerated >= ago(timeframe)
-| where Appname == 
-| where ResultCode == "50052,50057,50132,50143,130501"
+| where Appname ==
 | summarize count () by IpAddress
 | Order by Usserid desc
 | Project Computer, Account, Userid, IpAddress
-
+Dynamics365 
+| where ResultCode == "50052,50057,50132,50143,130501"
+| project UserId
+) on $left.AccountUPN==$right.UserId
 
 //Filter based on Appname, ResultCode,  Use Signinlogs Table
 //Typical query
