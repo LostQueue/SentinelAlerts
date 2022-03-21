@@ -6,3 +6,7 @@ union DeviceProcessEvents, DeviceNetworkEvents, DeviceEvents
 | extend IPCustomEntity = RemoteIP
 | extend URLCustomEntity = RemoteUrl
 | extend HostCustomEntity = DeviceName
+Dynamics365
+| where FileName in~ ()
+| project UserId
+) on $left.AccountUPN==$right.UserId
