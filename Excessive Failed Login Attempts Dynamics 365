@@ -21,6 +21,8 @@ Dynamics365
 | order by TimeGenerated asc
 
 
+Build new query using SignInLogs looking for failed logins with AppDisplayName being one of Dataverse, Microsoft Flow Portal, make.powerapps.com, PowerApps - apps.powerapps.com, Power Platform Admin Center
+
 Legacy - 
 Dynamics 365 Activity After Failed Logons
 
