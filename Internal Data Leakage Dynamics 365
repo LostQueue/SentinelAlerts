@@ -1,12 +1,7 @@
-union DeviceProcessEvents, DeviceNetworkEvents, DeviceEvents
-| where Timestamp > ago(7d)
-| where FileName in~ ("powershell.exe", "powershell_ise.exe")
-| where ProcessCommandLine has_any("WebClient", "DownloadFile", "DownloadData", "DownloadString", "WebRequest", "Shellcode", "http", "https")
-| project Timestamp, DeviceName, InitiatingProcessFileName, InitiatingProcessCommandLine, FileName, ProcessCommandLine, RemoteIP, RemoteUrl, RemotePort, RemoteIPType
-| extend IPCustomEntity = RemoteIP
-| extend URLCustomEntity = RemoteUrl
-| extend HostCustomEntity = DeviceName
-Dynamics365
-| where FileName in~ ()
-| project UserId
-) on $left.AccountUPN==$right.UserId
+Dynamics365Activity
+| where Timestamp > ago(7d) 
+| where FileName in~ ("", "")
+| where ProcessCommandLine has_any("DownloadFile", "DownloadData", "DownloadString")
+| project ClientIP, UserId,
+| extend ClientIP
+| extend UserId
