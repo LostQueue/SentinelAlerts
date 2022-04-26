@@ -1,15 +1,10 @@
 let timeframe = 1d;
 let timebin = 10m;
-let signin_threshold = 5; 
 SigninLogs
-| where AppDisplayName == "Dataverse,Microsoft Flow Portal,make.powerapps.com,Power Platform Admin Center"
+| where AppDisplayName in ("Dataverse","MicrosoftFlowPortal","make.powerapps.com","Power Platform Admin Center")
+| where ResultType == "50052,50057,50132,50143,130501"
 | summarize count() by IPAddress
 | order by IPAddress desc 
-| project IPAddress
-| join (Dynamics365Activity
-| where ResultStatus == "50052,50057,50132,50143,130501"
-| project UserId
-) on $left.IPAddress==$right.UserId
 
 Legacy - 
 Dynamics 365 Activity After Failed Logons
