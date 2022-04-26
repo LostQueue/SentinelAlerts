@@ -3,7 +3,7 @@ let timebin = 10m;
 let signin_threshold = 5;  //Maybe let failedthreshold = 5;
 SigninLogs
 | where TimeGenerated >= ago(timeframe)
-| where Appname ==
+| where Appname == "Dataverse, Microsoft Flow Portal, make.powerapps.com, PowerApps - apps.powerapps.com, Power Platform Admin Center"
 | summarize count () by IpAddress
 | Order by Usserid desc
 | Project Computer, Account, Userid, IpAddress
