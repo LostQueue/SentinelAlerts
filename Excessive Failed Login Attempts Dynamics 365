@@ -19,3 +19,18 @@ Dynamics365
 | where EventID in (4625) and Status=="0xc000006d"
 | summarize min(TimeGenerated),  EventCount = count() by bin_at(TimeGenerated, 1h,now())
 | order by TimeGenerated asc
+
+
+Legacy - 
+Dynamics 365 Activity After Failed Logons
+
+let threshold = 10;
+SigninLogs
+| where ResultType in ("50125", "50140", "70043", "70044")
+| summarize count() by IPAddress
+| where count_ >= threshold
+| join (Dynamics365Activity
+| extend IPAddress = tostring(split(ClientIP, ":")[0]))
+on IPAddress
+| project-rename FailedLogonCount = count_
+| extend timestamp = TimeGenerated, AccountCustomEntity = UserId, IPCustomEntity = IPAddress
