@@ -1,0 +1,3 @@
+let sampleData = datatable(TimeGenerated:datetime, Caller:string, CallerIpAddress:string, Operation:string, ResourceName:string) [
+    datetime(2022-05-02T12:10:13Z), "TestUser@Test.com", "208.5.24.35", "KeyDelete", "mytestvm01"
+];
