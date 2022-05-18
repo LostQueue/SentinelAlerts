@@ -1,0 +1,4 @@
+let sensitiveEntityTypes = dynamic(["lead"]);
+Dynamics365Activity
+| where EntityName in (sensitiveEntityTypes)
+| project .........
