@@ -1,0 +1,9 @@
+
+
+Branching the rule into 3 separate rules:
+
+Sign in logs, looking for successful sign ins
+
+OfficeActivity, looking for "concerning" activity
+
+W3CIISLogs, looking for hits to non-public, unauthenticated pages
