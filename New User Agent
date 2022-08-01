@@ -1,0 +1,7 @@
+// Azure Sentinel analytics rule to tell us if we got a successful sign in from one of these agents.//
+
+let successCodes = dynamic([0, 50055, 50057, 50155, 50105, 50133, 50005, 50076, 50079, 50173, 50158, 50072, 50074, 53003, 53000, 53001, 50129]);
+SigninLogs
+| where UserAgent contains "Outlook-iOS/723.4027091.prod.iphone (4.28.0)" or UserAgent contains "Mozilla/5.0 (iPhone; CPU iPhone OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148"
+| where ResultType in (successCodes)
+| project UserPrincipalName
