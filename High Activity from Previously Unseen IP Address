@@ -1,0 +1,27 @@
+let safeIPLookback = 7d;
+let timeBucket = 1d;
+let TotalEventsThreshold = 5;
+let SafeIPSigninThreshold = 5;
+let SafeUserList = dynamic(["CDSFileStorage@onmicrosoft.com", "Flow-RP@onmicrosoft.com"]);
+// Create a list of Safe IPs as IPs with successful AAD Sign in from prior to the current time bucket
+// Only consider an IP safe if there are more than N successful sign ins from it (as set with SafeIPSigninThreshold)
+let SafeIPs = SigninLogs
+| where TimeGenerated between (ago(safeIPLookback) .. ago(timeBucket))
+| where ResultType == 0
+| summarize count() by IPAddress
+| where count_ > SafeIPSigninThreshold
+| distinct IPAddress;
+// Get the list of D365 logs that are in scope
+let D365BaseLogs = Dynamics365Activity
+| where TimeGenerated > ago(timeBucket)
+| where UserId !in (SafeUserList)
+| where ClientIP !in (SafeIPs); //Maybe consider Another source for anon IP//
+// Find the IPs that have more operations than the TotalEventsThreshold
+D365BaseLogs
+| summarize OperationCountForIP = count() by ClientIP
+| where OperationCountForIP > TotalEventsThreshold
+// Join back to the base logs to get the full list of events
+| join kind=leftouter D365BaseLogs on ClientIP
+| extend UsernameParts = split(UserId, "@")
+| project TimeGenerated, ClientIP, OperationCountForIP, Username = UsernameParts[0], UserUPNSuffix = UsernameParts[1], UserType, InstanceUrl, Message, EntityName, OriginalObjectId
+| order by ClientIP asc
