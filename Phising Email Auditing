@@ -1,0 +1,22 @@
+
+// This query gets the number of delivered phishing simulation emails
+// Uncomment the last line (| summarize count()) to return just the raw number
+// Leave it commented to view and spot check the actual records
+EmailEvents
+| where OrgLevelPolicy == "Phishing Simulation"
+| join kind=leftsemi (    // Get the users in the EMEA OU in Active Directory    IdentityInfo    | where OnPremisesDistinguishedName endswith "OU="",OU= "",DC= "",DC="",DC="""    | distinct AccountObjectId
+) on $left.RecipientObjectId == $right.AccountObjectId
+// | summarize count()
+ 
+
+
+// This query gets the number of reported phishing simulation emails
+// Uncomment the last line (| summarize count()) to return just the raw number
+// Leave it commented to view and spot check the actual records
+CloudAppEvents
+| where ActivityType == "Basic"
+| where ActionType == "AttackSimUserSubmission"
+| join kind=leftsemi (    // Get the users in the EMEA OU in Active Directory    IdentityInfo    | where OnPremisesDistinguishedName endswith "OU="",OU="",DC="",DC="",DC="""    | distinct AccountObjectId
+) on $left.AccountObjectId == $right.AccountObjectId
+// | summarize count()
+
