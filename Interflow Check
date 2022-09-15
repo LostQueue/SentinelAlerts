@@ -1,0 +1,10 @@
+ tells if the log with malicious IP was reported by interflow or not.
+
+
+CommonSecurityLog
+
+| where * contains 'interflow'
+
+| where DestinationIP == '172.64.80.1'
+
+| extend ismalicious = isnotempty(MaliciousIP);
