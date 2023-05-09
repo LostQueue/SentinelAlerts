@@ -3,19 +3,16 @@
 // The rule uses the Azure Activity Log as the data source
 
 // Define the threshold for the rule to trigger
-let timeWindow = 5m // 5 minutes
-
+let timeWindow = 5m; // 5 minutes
 // Define the query to search for modifications to NSGs
 AzureActivity
 | where Category == "SecurityRule" and ResourceProviderValue == "Microsoft.Network" and OperationNameValue == "Microsoft.Network/networkSecurityGroups/securityRules/write"
 | where TimeGenerated > ago(timeWindow)
 | project ResourceId, OperationName, Caller, TimeGenerated
-
 // Define the logic for triggering the rule
 | summarize LastModified=max(TimeGenerated) by ResourceId, OperationName, Caller
 | where LastModified > ago(timeWindow)
 | project ResourceId, OperationName, Caller, LastModified
-
 // Set the rule's severity level and provide a description
-| extend AlertSeverity = 2
-| extend AlertDescription = strcat("The NSG with ID '", ResourceId, "' was modified by '", Caller, "' at '", LastModified, "'.")
+//| extend AlertSeverity = 2
+//| extend AlertDescription = strcat("The NSG with ID", ResourceId, "was modified by", Caller, "at", LastModified, ".")
