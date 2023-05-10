@@ -94,4 +94,14 @@ SecurityEvent
 | summarize by Computer
 
 
+Usage
+| where TimeGenerated >= ago(1d)
+| summarize sum(Quantity) by ResourceId
+| join (ResourceContainer
+| where type =~ "Microsoft.Compute/virtualMachines"
+| project ResourceId, ResourceName, Location), on ResourceId
+| project ResourceName, Location, sum_Quantity_GB=sum(Quantity)/1024/1024/1024
+| order by sum_Quantity_GB desc
+
+
 
