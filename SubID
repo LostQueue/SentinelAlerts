@@ -2,3 +2,96 @@ SubID: 93a47507-5035-4068-aa63-d1073e7fe971
 WorkspaceId: 8a66252a-0d46-4d31-a036-eb9de1f94be3
 WorkspaceName: nms-olde-xdr-log-analytics-prod
 ResourceGroup: security-log-analytics
+
+
+NSG
+
+AzureActivity
+| where OperationNameValue == "Microsoft.Network/networkSecurityGroups/write"
+| where ResourceProviderValue == "Microsoft.Network"
+| summarize arg_max(TimeGenerated, *) by Caller
+
+
+Cost by resource group
+
+AzureActivity
+| where OperationNameValue == "Microsoft.Network/networkSecurityGroups/write"
+| where ResourceProviderValue == "Microsoft.Network"
+| summarize arg_max(TimeGenerated, *) by Caller
+
+Cost by service
+
+Usage
+| where Quantity > 0
+| summarize TotalCost = sum(Quantity * MeterId * MeterRates) by ServiceName
+| sort by TotalCost desc
+
+Cost Trend over time
+
+Usage
+| where Quantity > 0
+| summarize TotalCost = sum(Quantity * MeterId * MeterRates) by bin(TimeGenerated, 1d)
+| render timechart
+
+
+List of Users who have signed in
+
+Usage
+| where Quantity > 0
+| summarize TotalCost = sum(Quantity * MeterId * MeterRates) by bin(TimeGenerated, 1d)
+| render timechart
+
+SigninLogs
+| summarize count() by UserPrincipalName
+
+
+Failed sign-ins by user
+
+SigninLogs
+| where Success == false
+| summarize count() by UserPrincipalName
+
+List of users with elevated priviledges
+
+AuditLogs
+| where Category == "Authorization"
+| where OperationName == "Add Role Assignment"
+| where TargetResources[0].Type == "Microsoft.Authorization/roleAssignments"
+| where TargetResources[0].Scope == "/"
+| extend UserPrincipalName = tostring(parse_json(TargetResources[0].Properties["principalName"]))
+| summarize count() by UserPrincipalName
+
+List of NSGs with open ports:
+
+NetworkSecurityGroupEvent
+| where ActionName == "Microsoft.Network/networkSecurityGroups/securityRules/write" 
+| where Properties contains "destinationPortRange\": \"*\"" 
+| summarize by ResourceId
+
+List of failed VPN connections:
+
+AzureDiagnostics
+| where Category == "GatewayConnection" 
+| where OperationName == "TunnelFailure" 
+| summarize count() by ResourceGroup, ResourceProvider, Resource, TimeGenerated
+
+List of VMs without a NSG:
+
+AzureActivity
+| where OperationNameValue == "Microsoft.Network/networkInterfaces/delete" 
+| extend VMName = tostring(split(tostring(Properties["resourceUri"]), "/")[8])
+| summarize by VMName
+| join kind=leftanti (NetworkInterfaceEvent 
+| where OperationName == "Microsoft.Network/networkInterfaces/securityRules/prepareNetworkInterfaceUpdate/action"
+| summarize by ResourceId)
+on VMName
+
+List of virtual machines with missing critical security updates:
+
+SecurityEvent 
+| where EventID == "1116" 
+| where Description contains "Critical" and Description contains "update(s) are missing" 
+| summarize by Computer
+
+
+
