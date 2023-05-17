@@ -1,0 +1,10 @@
+AzureActivity
+| where OperationName == "Microsoft.Storage/storageAccounts/listKeys/action"
+| extend storageAccountId = ResourceId
+| join kind=inner (
+    AzureActivity
+    | where OperationName == "Microsoft.Storage/storageAccounts/blobServices/containers/list"
+    | extend containerName = tostring(Properties['containerName'])
+    | summarize Containers = make_set(containerName) by storageAccountId
+) on storageAccountId
+| project StorageAccount = tolower(split(storageAccountId, '/')[8]), Containers
