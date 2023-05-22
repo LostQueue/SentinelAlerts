@@ -1,0 +1,12 @@
+AuditLogs
+| where LoggedByService =~ "PIM"
+| where Category =~ "RoleManagement"
+| where ActivityDisplayName has "Disable PIM Alert"
+| extend IpAddress = case(
+  isnotempty(tostring(parse_json(tostring(InitiatedBy.user)).ipAddress)) and tostring(parse_json(tostring(InitiatedBy.user)).ipAddress) != 'null', tostring(parse_json(tostring(InitiatedBy.user)).ipAddress), 
+  isnotempty(tostring(parse_json(tostring(InitiatedBy.app)).ipAddress)) and tostring(parse_json(tostring(InitiatedBy.app)).ipAddress) != 'null', tostring(parse_json(tostring(InitiatedBy.app)).ipAddress),
+  'Not Available')
+| extend InitiatedBy = iff(isnotempty(tostring(parse_json(tostring(InitiatedBy.user)).userPrincipalName)), 
+  tostring(parse_json(tostring(InitiatedBy.user)).userPrincipalName), tostring(parse_json(tostring(InitiatedBy.app)).displayName)), UserRoles = tostring(parse_json(tostring(InitiatedBy.user)).ipAddress)
+| project InitiatedBy, ActivityDateTime, ActivityDisplayName, IpAddress, AADOperationType, AADTenantId, ResourceId, CorrelationId, Identity
+| extend timestamp = ActivityDateTime, IPCustomEntity = IpAddress, AccountCustomEntity = tolower(InitiatedBy), ResourceCustomEntity = ResourceId
