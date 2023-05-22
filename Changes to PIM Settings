@@ -1,0 +1,6 @@
+AuditLogs
+  | where Category =~ "RoleManagement"
+  | where OperationName =~ "Update role setting in PIM"
+  | extend userPrincipalName = tostring(parse_json(tostring(InitiatedBy.user)).userPrincipalName)
+  | extend ipAddress = tostring(parse_json(tostring(InitiatedBy.user)).ipAddress)
+  | project-reorder TimeGenerated, OperationName, ResultReason, userPrincipalName, ipAddress
