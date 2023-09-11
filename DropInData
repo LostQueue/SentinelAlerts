@@ -1,0 +1,35 @@
+// Exclude these data types from alerting completely.  Most of them generate data only occasionally so they create a lot of false positives
+let ExcludedDataTypes = dynamic(['WUDOAggregatedStatus', 'SecurityBaselineSummary', 'KubePodInventory_CL', 'KubeEvents_CL', 'Anomalies', 'Alert', 'SqlVulnerabilityAssessmentScanStatus', 'SecurityDetection', 'DatabricksSSH', 'DatabricksDBFS', 'AADRiskyUsers', 'AADUserRiskEvents', 'SentinelAudit', 'DatabricksClusters', 'DatabricksSQLPermissions', 'DatabricksJobs', 'DatabricksNotebook','SynapseIntegrationActivityRuns', 'SynapseIntegrationPipelineRuns']);
+// Union to join multiple queries together as we're searching for this in 2 different ways
+union 
+(
+    // This query uses anomaly detection to find unusual dips in the amount of data received
+    Usage
+    | make-series DailyTotal = sum(Quantity) on TimeGenerated from startofday(ago(14d)) to startofday(now()) step 1d by DataType
+    | extend (anomalies, score, baseline) = series_decompose_anomalies(DailyTotal, 5, -1, 'linefit')
+    | mv-expand DailyTotal to typeof(double), TimeGenerated to typeof(datetime), anomalies to typeof(double),score to typeof(double), baseline to typeof(long)
+    // Get negative anomalies (indicating a drop in data) from the last day
+    | where anomalies < 0 and TimeGenerated > ago(2d)
+    | project TimeGenerated, DataType, DailyTotal, Baseline=baseline, AnomalyScore=score, AlertType = "Unexpectedly low amount of data"
+),
+(
+    // This query looks for data types that had received data in the prior week, but didn't receive any in this past week
+    Usage
+    | where TimeGenerated between(startofday(ago(13d)) .. startofday(ago(7d)))
+    | summarize sum(Quantity), max(TimeGenerated) by DataType
+    | where sum_Quantity > 0
+    | join kind=leftanti (
+        Usage
+        | where TimeGenerated between (startofday(ago(7d)) .. startofday(now()))
+        | summarize sum(Quantity) by DataType
+        | where sum_Quantity > 0
+    ) on DataType
+    | project TimeGenerated = max_TimeGenerated, DataType, DailyTotal=sum_Quantity, AlertType = strcat("No data since ", max_TimeGenerated)
+    // Only alert twice (once right away, once before the data type falls off) for "No data since" alerts
+    // Without these, the same table alerts 5 or 6 days in a row
+    | where TimeGenerated >= startofday(ago(8d)) or TimeGenerated between (ago(13d) .. ago(12d))
+)
+// Excluded data types that aren't security related and don't log data every day
+| where DataType !in (ExcludedDataTypes)
+// Suppress AADDS data types as we have an ongoing issue with them. There is a ticket open with MS regarding these
+| where not(DataType startswith "AADDomainServices" and now() < datetime(2023-07-01T00:00:00Z))
