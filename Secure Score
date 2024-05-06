@@ -30,3 +30,57 @@ SecureScoreControls
 | where latestTimestamp == TimeGenerated
 | project ControlName, latestTimestamp, potentialScoreIncrease
 | top 5 by potentialScoreIncrease
+
+
+
+
+Email Body:
+
+<style type="text/css">
+       h1 {
+		font-family: "Segoe UI";
+		font-size: 32px;
+		font-style: normal;
+		font-variant: normal;
+		font-weight: 700;
+		line-height: 30px;
+	}
+
+</style>
+<table align="center" border="0" cellpadding="1" cellspacing="1" style="width:800px;">
+	<tbody>
+		<tr>
+			<th style="text-align:left; width:735px">
+				<table align="left" border="0" cellpadding="0" cellspacing="0" style="width: 550px;">
+					<tbody>
+						<tr>
+		<td><img src="https://raw.githubusercontent.com/Azure/Azure-Security-Center/master/.github/images/asc.png" alt="" width="125" height="125" /></td>
+		<td>
+		<h1 style="text-align: left;">Azure Security Center</h1>
+                                                          
+                  </td>
+						</tr>
+					</tbody>
+				</table>
+			</th>
+		</tr>
+            </tbody>
+            <tr>
+		<td style="width:900px">
+		<p style="text-align: left;"><strong>Secure Score Weekly Report</strong><br><br>
+		</td>
+		</tr>
+<br>
+<strong>Current Secure Score</strong>
+@{body('CurrentScore')?['body']}
+<br>
+<p><strong>Your secure score since the last report</strong></p>
+<p>Please refer below graph representing the weekly Secure Score history:</p>
+@{variables('ChartString')}
+<br>
+<p><strong>Security controls that need to be prioritized</strong></p>
+<p>Currently the following security controls have resources that were not remediated yet:</p>
+@{body('UnhealthyResources')?['body']}
+<br>
+<p><strong>Top 5 recommendations that are currently open</strong></p>
+@{body('List_Top_5_Security_Controls')?['body']}
