@@ -1,0 +1,32 @@
+SecureScores
+| extend SubscriptionId = tostring(split(AssessedResourceId, "/", 2)[0])
+| where MaxScore != 0 and TimeGenerated > ago(31d)
+| project  SubscriptionId, TimeGenerated, PercentageScore
+| summarize by bin(TimeGenerated,1d), PercentageScore*100
+
+
+SecureScores
+| where TimeGenerated > ago(31d)
+| top 1 by TimeGenerated
+| project  SubscriptionId=SecureScoresSubscriptionId, Currentscore=PercentageScore*100 
+
+SecureScoreControls
+| extend SubscriptionId=SecureScoresSubscriptionId
+| mv-expand RecommendationResourceIds
+| extend id_ = tostring(parse_json(RecommendationResourceIds).id)
+| extend RecommendationId = extract(@"(.+)/(.+)", 2, id_)
+| join kind=inner(SecurityRecommendation
+| extend SubscriptionId=(extract(@"/subscriptions/(.+)/resourceGroups", 1, AssessedResourceId))) on SubscriptionId, RecommendationId
+| where RecommendationState == "Unhealthy"   or RecommendationState == "Removed"
+| summarize UnhealthyResources=dcount(AssessedResourceId) by ControlName, RecommendationDisplayName, SubscriptionId
+
+
+SecureScoreControls
+| extend potentialScoreIncrease=MaxScore-CurrentScore
+| join kind =inner (
+ SecureScoreControls
+ | summarize latestTimestamp=max(TimeGenerated) by ControlName
+) on ControlName
+| where latestTimestamp == TimeGenerated
+| project ControlName, latestTimestamp, potentialScoreIncrease
+| top 5 by potentialScoreIncrease
