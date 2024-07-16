@@ -1,0 +1,15 @@
+Windows
+
+// Query to detect NTP time changes on Windows machines
+SecurityEvent
+| where EventID == 4616 // Event ID for system time change on Windows
+| extend EventXML = todynamic(EventData)
+| extend NewSystemTime = todatetime(EventXML.SystemTime)
+| project TimeGenerated, NewSystemTime, Computer, ActionType = "System Time Change"
+
+Linux
+
+// Query to detect NTP time changes on Linux machines (using syslog)
+Syslog
+| where SyslogMessage contains "time synchronised" // Adjust as per your syslog message format
+| project TimeGenerated, SyslogMessage, Computer, ActionType = "System Time Change"
