@@ -30,3 +30,15 @@ AzureActivity
          RoleDefinitionId = tostring(PropertiesParsed.roleDefinitionId),
          Scope = tostring(PropertiesParsed.scope)
 | project TimeGenerated, OperationName, Caller, ClientIpAddress, ActivityStatusValue, PrincipalId, RoleDefinitionId, Scope
+
+// Acocount Creation
+
+AuditLogs
+| where ActivityDisplayName in ("Disable account", "Enable account", "Add user")
+| extend InitiatedBy = tostring(parse_json(InitiatedBy).user.userPrincipalName), 
+         TargetUserId = tostring(TargetResources[0].userPrincipalName),
+         TargetUserDisplayName = tostring(TargetResources[0].displayName),
+         ActivityType = ActivityDisplayName
+| project TimeGenerated, InitiatedBy, TargetUserId, TargetUserDisplayName, ActivityType, ResultReason
+| order by TimeGenerated desc
+
