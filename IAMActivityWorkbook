@@ -1,0 +1,9 @@
+AuditLog
+| where ActivityDisplayName in ("Add member to group", "Remove member from group")
+| extend InitiatedByParsed = parse_json(InitiatedBy)
+| extend UserPrincipalName = iff(isnotempty(InitiatedByParsed.user), tostring(InitiatedByParsed.user.userPrincipalName), ""),
+         UserId = iff(isnotempty(InitiatedByParsed.user), tostring(InitiatedByParsed.user.id), ""),
+         DisplayName = iff(isnotempty(InitiatedByParsed.user), tostring(InitiatedByParsed.user.displayname), ""),
+         IpAddress = iff(isnotempty(InitiatedByParsed.user), tostring(InitiatedByParsed.user.ipAddress), ""),
+         Identity = iff(isnotempty(InitiatedByParsed.user), "", tostring(InitiatedByParsed.identity))
+| project ActivityDisplayName, UserPrincipalName, UserId, DisplayName, IpAddress, Identity
