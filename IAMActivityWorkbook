@@ -17,3 +17,16 @@ AzureActivity
 | extend Scope = tostring(parse_json(Properties).scope)
 | extend Principal = tostring(parse_json(Properties).principalName)
 | project TimeGenerated, OperationName, RoleName, Scope, Principal
+
+
+
+AzureActivity
+| where OperationName contains "Microsoft.Authorization/roleassignments"
+| extend PropertiesParsed = parse_json(Properties)
+| extend Caller = tostring(PropertiesParsed.caller),
+         ClientIpAddress = tostring(PropertiesParsed.clientIpAddress),
+         ActivityStatusValue = tostring(PropertiesParsed.activityStatus.value),
+         PrincipalId = tostring(PropertiesParsed.principalId),
+         RoleDefinitionId = tostring(PropertiesParsed.roleDefinitionId),
+         Scope = tostring(PropertiesParsed.scope)
+| project TimeGenerated, OperationName, Caller, ClientIpAddress, ActivityStatusValue, PrincipalId, RoleDefinitionId, Scope
