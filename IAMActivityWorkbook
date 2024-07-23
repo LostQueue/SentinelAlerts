@@ -7,3 +7,13 @@ AuditLog
          IpAddress = iff(isnotempty(InitiatedByParsed.user), tostring(InitiatedByParsed.user.ipAddress), ""),
          Identity = iff(isnotempty(InitiatedByParsed.user), "", tostring(InitiatedByParsed.identity))
 | project ActivityDisplayName, UserPrincipalName, UserId, DisplayName, IpAddress, Identity
+
+
+//Role Changes
+
+AzureActivity
+| where OperationNameValue contains "Microsoft.Authorization/roleAssignments"
+| extend RoleName = tostring(parse_json(Properties).roleDefinitionName)
+| extend Scope = tostring(parse_json(Properties).scope)
+| extend Principal = tostring(parse_json(Properties).principalName)
+| project TimeGenerated, OperationName, RoleName, Scope, Principal
